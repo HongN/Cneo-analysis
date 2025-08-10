@@ -45,7 +45,7 @@ rm -f ${sample[$i]}_sort_dd_name.bam
 /home/minc/biosoft/gatk-4.1.8.1/gatk SelectVariants -R $crypto_path/crypto.fasta -V ${sample[$i]}.raw_variants.vcf -O ${sample[$i]}.raw_snps.vcf -select-type SNP
 rm -f ${sample[$i]}.raw_variants.vcf
  
- ## Filter SNPs
+## Filter SNPs
 /home/minc/biosoft/gatk-4.1.8.1/gatk VariantFiltration -R $crypto_path/crypto.fasta -V ${sample[$i]}.raw_snps.vcf -O ${sample[$i]}.filtered_snps.vcf --filter-expression "MQ < 40.0 || QD < 2.0 || FS > 60.0" --filter-name LowConf
 rm -f ${sample[$i]}.raw_snps.vcf
 grep -v LowConf ${sample[$i]}.filtered_snps.vcf > ${sample[$i]}.first_filtered_snps.vcf
