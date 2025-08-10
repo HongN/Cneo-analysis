@@ -1,0 +1,40 @@
+#!/bin/bash
+
+##read sample data 
+crypto_path='/home/minc/Ref/crypto_VNIa5'
+sample=($(awk '{print $0}' /home/minc/crypto_transcriptome/work/crypto_name.txt))
+ 
+for((i=0;i<=(${#sample[@]}-1);i++));do
+       {
+mkdir /home/minc/crypto_transcriptome/work/${sample[$i]}
+cd /home/minc/crypto_transcriptome/work/${sample[$i]}
+cp /home/minc/crypto_transcriptome/${sample[$i]}_* .
+gunzip ${sample[$i]}_*
+rm -f *.fastq.gz
+ 
+## trim the fastqs
+~/biosoft/SOAPnuke/SOAPnuke filter -1 ${sample[$i]}_1.fastq -2  ${sample[$i]}_2.fastq -C ${sample[$i]}_1.clean.fastq -D ${sample[$i]}_2.clean.fastq -l 10 -q 0.1 -n 0.01 -T 8 -o ./
+rm -f ${sample[$i]}_1.fastq
+rm -f ${sample[$i]}_2.fastq
+rm -f *.txt
+rm -f log
+
+##build hisat index
+mkdir $crypto_path/hisat_index
+cd $crypto_path/hisat_index
+hisat2_extract_splice_sites.py VNIa5.gtf > splitsites.txt
+hisat2_extract_exons.py VNIa5.gtf > exonsites.txt
+hisat2-build -p 4 --ss splitsites.txt --exon exonsites.txt $crypto_path/crypto.fasta VNIa5_hisat
+ 
+## hisat mapping
+hisat2 -x $crypto_path/hisat_index/VNIa5_hisat -p 8 --min-intronlen 20 --max-intronlen 1000 -1 ${sample[$i]}_1.clean.fastq -2 ${sample[$i]}_2.clean.fastq -S ${sample[$i]}.sam 2> ${sample[$i]}.hisat2.log
+rm -f ${sample[$i]}_1.clean.fastq  ${sample[$i]}_2.clean.fastq
+rm -f *.unpaired.fastq
+samtools view -b -@ 8 ${sample[$i]}.sam > ${sample[$i]}.bam
+rm -f ${sample[$i]}.sam
+ 
+##htseq count
+htseq-count -f bam -r name -s reverse -a 10 -m union -t exon -i gene_id ${sample[$i]}.bam $crypto_path/hisat_index/crypto_VNIa5.gtf > ${sample[$i]}_htseq_counts.txt
+rm -f ${sample[$i]}.bam
+}
+done

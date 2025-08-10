@@ -1,0 +1,30 @@
+##Prepare normalized per site coverage file:
+## (1) The per site coverage is calculated by gatk DepthOfCoverage and stored in result file : ${sample[$i]}_coverage. (2) The average coverage across genome is calculated by gatk DepthOfCoverage and should be found in result file: ${sample[$i]} _coverage.sample_summary. (3) The per site coverage file is divided by average coverage across genome to acquire the calibrated per site coverage file: ${sample[$i]}_coverage_normalized. The result file contains three columns: chromosome, position, per site normalized coverage.  (4) All the above steps can easily be done by ¡°awk¡± command. 
+
+## Normalized per site coverage to gene coverage
+#!/bin/bash
+crypto_path='/home/minc/Ref/crypto_VNIa5
+sample=($(awk '{print $0}' /home/minc/VNIa5_VNIa31/name.txt))
+for((i=0;i<=(${#sample[@]}-1);i++));do
+        {
+mkdir /home/minc/VNIa5_VNIa31/CNV_result/${sample[$i]}
+cd /home/minc/VNIa5_VNIa31/CNV_result/${sample[$i]}
+cp /home/minc/VNIa5_VNIa31/CNV_result/${sample[$i]}_coverage_normalized ./coverage
+## The normalized per site coverage file contain three columns: chromosome ($1), position ($2), per site normalized coverage ($3).
+
+## Extract the normalized per site coverage within each gene location and stored in a file named by gene name
+cp /home/minc/hongnan_shell/CNV_analysis/CNV_VNIa5_awk.sh .
+ParaFly -c CNV_VNIa5_awk.sh -CPU 8
+
+## Calculate the mean per site normalized coverage of each gene
+cp /home/minc/hongnan_shell/CNV_analysis/CNV_calculate.txt .
+## Content of CNV_calculate.txt: {sum += $3} END {print FILENAME"\t"sum/NR}
+
+ls FUN_* > filename
+awk '{print "awk -f CNV_calculate.txt "$1" > result_"$1}' filename > hn_CNV.sh
+ParaFly -c hn_CNV.sh -CPU 8
+cat result_* > ${sample[$i]}_CNV_final_rawgene_result
+rm -f FUN_*
+rm -f result_*
+}
+done
