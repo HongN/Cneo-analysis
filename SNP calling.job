@@ -1,0 +1,64 @@
+#!/bin/bash
+
+## set the path to reference genome
+crypto_path='/home/minc/Ref/crypto_VNIa5'
+
+## read in sample names
+sample=($(awk '{print $0}' /home/minc/crypto_snp/crypto_name.txt))
+
+for((i=0;i<=(${#sample[@]}-1);i++));do
+{
+mkdir ~/crypto_snp/${sample[$i]}
+cd ~/crypto_snp/${sample[$i]}
+
+## copy genome sequences to working directory
+cp ~/work/crypto_primarydata/${sample[$i]}_* .
+ 
+## Trim sequence pairs
+fastp -i ${sample[$i]}_1.fastq.gz -o ${sample[$i]}_1_out.fastq.gz -I ${sample[$i]}_2.fastq.gz -O ${sample[$i]}_2_out.fastq.gz -w 8
+mv ${sample[$i]}_1_out.fastq.gz ${sample[$i]}_1.fastq.gz
+mv ${sample[$i]}_2_out.fastq.gz ${sample[$i]}_2.fastq.gz
+rm -f fastp.html 
+rm -f fastp.json 
+ 
+## Mapping reads to reference genome
+bwa mem -t 12 -M $crypto_path/crypto.fasta ${sample[$i]}_1.fastq.gz ${sample[$i]}_2.fastq.gz >${sample[$i]}_PE.sam
+rm -f ${sample[$i]}_1.fastq.gz ${sample[$i]}_2.fastq.gz
+
+## Sam file to bam file
+samtools view -b -S -@ 12 ${sample[$i]}_PE.sam >${sample[$i]}_PE.bam
+rm -f ${sample[$i]}_PE.sam
+ 
+## prepare bam for SNP calling (sort; markduplicates; addname; index)
+picard SortSam I=${sample[$i]}_PE.bam O=${sample[$i]}_sort.bam SO=coordinate
+rm -f ${sample[$i]}_PE.bam
+picard MarkDuplicates I=${sample[$i]}_sort.bam O=${sample[$i]}_sort_dd.bam M=${sample[$i]}_sort_dd.metrics REMOVE_SEQUENCING_DUPLICATES=false 
+rm -f ${sample[$i]}_sort.bam
+rm -f ${sample[$i]}_sort_dd.metrics
+picard AddOrReplaceReadGroups I=${sample[$i]}_sort_dd.bam O=${sample[$i]}_sort_dd_name.bam RGID=${sample[$i]} RGLB=${sample[$i]} RGPL=Illumina RGPU=run RGSM=${sample[$i]}
+rm -f ${sample[$i]}_sort_dd.bam
+samtools index ${sample[$i]_sort_dd_name.bam
+
+## calling SNPs 
+/home/minc/biosoft/gatk-4.1.8.1/gatk HaplotypeCaller -R $crypto_path/crypto.fasta -I ${sample[$i]}_sort_dd_name.bam -ploidy 1 -O ${sample[$i]}.raw_variants.vcf  
+rm -f ${sample[$i]}_sort_dd_name.bam
+/home/minc/biosoft/gatk-4.1.8.1/gatk SelectVariants -R $crypto_path/crypto.fasta -V ${sample[$i]}.raw_variants.vcf -O ${sample[$i]}.raw_snps.vcf -select-type SNP
+rm -f ${sample[$i]}.raw_variants.vcf
+ 
+ ## Filter SNPs
+/home/minc/biosoft/gatk-4.1.8.1/gatk VariantFiltration -R $crypto_path/crypto.fasta -V ${sample[$i]}.raw_snps.vcf -O ${sample[$i]}.filtered_snps.vcf --filter-expression "MQ < 40.0 || QD < 2.0 || FS > 60.0" --filter-name LowConf
+rm -f ${sample[$i]}.raw_snps.vcf
+grep -v LowConf ${sample[$i]}.filtered_snps.vcf > ${sample[$i]}.first_filtered_snps.vcf
+rm -f ${sample[$i]}.filtered_snps.vcf
+cp /home/minc/hongnan_shell/PBS_filterGatkGenotypes.py .
+cp /home/minc/hongnan_shell/vcfTools.py .
+python2 PBS_filterGatkGenotypes.py --min_GQ 50 --min_percent_alt_in_AD 0.8 --min_total_DP 10 --keep_all_ref ${sample[${i}]}.first_filtered_snps.vcf > ${sample[${i}]}.final.vcf
+grep -v fail ${sample[$i]}.final.vcf > ${sample[$i]}.real_final.vcf  
+rm -f ${sample[${i}]}.first_filtered_snps.vcf
+rm -f ${sample[$i]}.final.vcf
+rm -f *.pyc
+rm -f *.py
+rm -f *.bai
+rm -f *.idx
+}
+done
