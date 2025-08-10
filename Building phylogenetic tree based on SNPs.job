@@ -6,7 +6,8 @@ for f in "${sample[@]}"; do sam+=(${f}.real_final.vcf.gz);done
 bcftools merge -0 --missing-to-ref -O v --threads 6 -o combined.vcf ${sam[@]}
  
 ## VCF file to phylip file (alignment)
- ~/biosoft/tasseladmin-tassel-5-standalone-bd304d03e096/run_pipeline.pl -Xmx32g -fork1 -vcf combined.vcf -export scedo_snp -exportType Phylip_Inter -sortPositions -runfork1
+ ~/biosoft/tasseladmin-tassel-5-standalone-bd304d03e096/run_pipeline.pl -Xmx32g -fork1 -vcf combined.vcf -export crypto_snp -exportType Phylip_Inter -sortPositions -runfork1
  
 ## building phylogenetic tree using ML with 1000 bootstraps
 raxmlHPC-PTHREADS-AVX2  -T 8 -p 1234578 -x 25678 -# 1000 -s crypto_snp.phy -m GTRCAT -f a -n crypto_snp_raxml
+
