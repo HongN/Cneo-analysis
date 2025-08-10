@@ -5,7 +5,7 @@ sample=($(awk '{print $0}' /home/minc/work/crypto_primarydata/all.txt))
 
 for((i=0;i<=(${#sample[@]}-1);i++));do
         {
-#mapping reads to reference genome to acquire bam file
+## mapping reads to reference genome to acquire bam file
 mkdir ~/CNV_new/${sample[$i]}
 cd ~/CNV_new/${sample[$i]}
 cp ~/work/crypto_primarydata/${sample[$i]}_* .
@@ -16,7 +16,7 @@ samtools view -b -S -@ 6 ${sample[$i]}_PE.sam > ${sample[$i]}_PE.bam
 rm -f ${sample[$i]}_PE.sam
 rm -f *.fastq
 
-#sort, mark duplication & filter bam file
+## sort, mark duplication & filter bam file
 picard SortSam I=${sample[$i]}_PE.bam O=${sample[$i]}_sort.bam SO=coordinate
 rm -f ${sample[$i]}_PE.bam
 picard MarkDuplicates I=${sample[$i]}_sort.bam O=${sample[$i]}_sort_dd.bam M=${sample[$i]}_sort_dd.metrics REMOVE_SEQUENCING_DUPLICATES=false CREATE_INDEX=TRUE ASSUME_SORTED=true
@@ -27,7 +27,7 @@ rm -f ${sample[$i]}_sort_dd.bam
 samtools index ${sample[$i]}_sort_dd_name.bam
 samtools view -b ${sample[$i]}_sort_dd_name.bam -q 30 -F 4 -F 256 -F 1024 -F 2048  >${sample[$i]}_filtered.bam
 
-#counting per site coverage using gatk DepthOfCoverage
+## counting per site coverage using gatk DepthOfCoverage
 samtools index ${sample[$i]}_filtered.bam
 gatk -R $crypto_path/crypto.fasta -T DepthOfCoverage -I ${sample[$i]}_filtered.bam -o ${sample[$i]}_coverage
 }
