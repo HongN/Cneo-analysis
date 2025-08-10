@@ -1,6 +1,6 @@
 setwd("C:/Users/nan/Desktop/Cneo/transcriptome")
 
-## The ¡°htseq_count.csv¡± contained 7 columns: gene names; gene count result of VNIa-5 and VNIa-31 strain with 3 repeating respectively calculated by Htseq
+## The htseq_count.csv file contained 7 columns: gene names; gene count result of VNIa-5 and VNIa-31 strain with 3 repeating respectively calculated by Htseq
 targets <- read.csv('htseq_count.csv', row.names = 1, check.names = FALSE)
 
 ## control: VNIa-31; treat: VNIa-5
