@@ -1,0 +1,5 @@
+## Use H99 protein as reference database
+makeblastdb -in H99_protein.fa -dbtype prot -out H99_protein -parse_seqids
+
+## query protein sequece are stored in 1.fs; then run blastp with protein sequence of H99
+blastp -query 1.fs -out transcriptome.blast_result -db H99_protein -num_threads 12 -outfmt 6 -max_target_seqs 1

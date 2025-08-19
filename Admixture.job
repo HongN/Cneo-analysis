@@ -1,0 +1,9 @@
+## choose biallelic snp
+/home/minc/biosoft/gatk-4.1.8.1/gatk SelectVariants --variant combined.vcf -O biallelic_combined.vcf --restrict-alleles-to BIALLELIC -R /home/minc/Ref/crypto_VNIa5/crypto.fasta
+## vcftools and plink to reformat the data to be ready for Admixture
+/home/minc/biosoft/vcftools-master/vcftools/bin/vcftools --vcf biallelic_combined.vcf --haploid --plink --out crypto_new
+plink --noweb --file crypto_new --recode 12 --make-bed --out prunData
+## run Admixure for K ranging from 1 to 15
+for K in {1..15}; do admixture --cv prunData.ped $K --haploid="*" >> log_admixture.out; done
+## check CV error value 
+grep CV log_admixture.out > K_choose.result.txt
