@@ -12,8 +12,9 @@ cd /home/minc/VNIa5_VNIa31/CNV_result/${sample[$i]}
 cp /home/minc/VNIa5_VNIa31/CNV_result/${sample[$i]}_coverage_normalized ./coverage
 ## The normalized per site coverage file contain three columns: chromosome ($1), position ($2), per site normalized coverage ($3).
 
-## Extract the normalized per site coverage within each gene location and stored in a file named by gene name
-cp /home/minc/hongnan_shell/CNV_analysis/CNV_VNIa5_awk.sh .
+## Extract the normalized per site coverage within each gene location; all gene location information are stored in file CNV_VNIa5_awk.sh
+
+/ho/home/minc/hongnan_shell/CNV_analysis/CNV_VNIa5_awk.sh .
 ParaFly -c CNV_VNIa5_awk.sh -CPU 8
 
 ## Calculate the mean per site normalized coverage of each gene
@@ -28,3 +29,4 @@ rm -f FUN_*
 rm -f result_*
 }
 done
+
