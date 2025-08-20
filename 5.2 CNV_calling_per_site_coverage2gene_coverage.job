@@ -1,5 +1,5 @@
 ##Prepare normalized per site coverage file:
-## (1) The per site coverage is calculated by gatk DepthOfCoverage and stored in result file : ${sample[$i]}_coverage. (2) The average coverage across genome is calculated by gatk DepthOfCoverage and should be found in result file: ${sample[$i]} _coverage.sample_summary. (3) The per site coverage file is divided by average coverage across genome to acquire the calibrated per site coverage file: ${sample[$i]}_coverage_normalized. The result file contains three columns: chromosome, position, per site normalized coverage.  (4) All the above steps can easily be done by ¡°awk¡± command. 
+## (1) The per site coverage is calculated by gatk DepthOfCoverage and stored in result file : ${sample[$i]}_coverage. (2) The average coverage across genome is calculated by gatk DepthOfCoverage and should be found in result file: ${sample[$i]} _coverage.sample_summary. (3) The per site coverage file is divided by average coverage across genome to acquire the calibrated per site coverage file: ${sample[$i]}_coverage_normalized. The result file contains three columns: chromosome, position, per site normalized coverage.  (4) All the above steps can easily be done by Â¡Â°awkÂ¡Â± command. 
 
 ## Normalized per site coverage to gene coverage
 #!/bin/bash
